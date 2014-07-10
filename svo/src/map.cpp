@@ -20,10 +20,15 @@
 #include <svo/frame.h>
 #include <svo/feature.h>
 #include <boost/bind.hpp>
+#include <svo/point.h>
+//#include <svo/field_edge_detector.h>
 
 namespace svo {
 
-Map::Map() {}
+Map::Map() {
+   my_fed=svo::Field_edge_detector();
+   my_fed.convert_to_pcl();
+}
 
 Map::~Map()
 {
@@ -81,6 +86,7 @@ void Map::removePtFrameRef(Frame* frame, Feature* ftr)
 
 void Map::safeDeletePoint(Point* pt)
 {
+
   // Delete references to mappoints in all keyframes
   std::for_each(pt->obs_.begin(), pt->obs_.end(), [&](Feature* ftr){
     ftr->point=NULL;
@@ -195,6 +201,43 @@ void Map::emptyTrash()
   });
   trash_points_.clear();
   point_candidates_.emptyTrash();
+  getAllPtsOfMap();
+}
+
+void Map::getAllPtsOfMap()
+{
+    //geometry_msgs::Point [] allPoints;
+    //geometry_msgs/Point[] sd;
+    svo_msgs::MapPoints allPoints;
+    ros::NodeHandle nh;
+    ros::Publisher pb = nh.advertise<svo_msgs::MapPoints>("mapPoints",1000);
+  //  ros::Publisher pb = nh.advertise<std_msgs::String>("mapPoints",1000);
+
+    for(auto it=keyframes_.begin(); it!=keyframes_.end(); ++it)
+    {
+      for(auto ftr=(*it)->fts_.begin(); ftr!=(*it)->fts_.end(); ++ftr)
+      {
+        if((*ftr)->point == NULL)
+          continue;
+        else {
+
+      //  allPoints.push_back((*ftr)->point);
+
+        Vector3d mypos = (*ftr)->point->pos_;
+       // Vector3d v(1,2,3);
+        geometry_msgs::Point pubPoint;
+
+        tf::pointEigenToMsg(mypos,pubPoint);
+        allPoints.points.push_back(pubPoint);
+        // allPoints.push_back(pubPoint);
+        //if (!(*ftr)->point->normal_set_){
+        //     ROS_INFO_STREAM(mypos.norm());
+       // }
+        }
+      }
+   pb.publish(allPoints);
+   ros::spinOnce();
+    }
 }
 
 MapPointCandidates::MapPointCandidates()

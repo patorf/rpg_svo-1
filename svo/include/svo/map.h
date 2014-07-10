@@ -21,7 +21,13 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 #include <svo/global.h>
-
+#include <ros/ros.h>
+#include "std_msgs/String.h"
+ #include <geometry_msgs/Point.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <svo/point.h>
+#include <svo_msgs/MapPoints.h>
+#include <svo/field_edge_detector.h>
 namespace svo {
 
 class Point;
@@ -71,6 +77,7 @@ public:
 class Map : boost::noncopyable
 {
 public:
+   Field_edge_detector my_fed;
   list< FramePtr > keyframes_;          //!< List of keyframes in the map.
   list< Point* > trash_points_;         //!< A deleted point is moved to the trash bin. Now and then this is cleaned. One reason is that the visualizer must remove the points also.
   MapPointCandidates point_candidates_;
@@ -120,6 +127,10 @@ public:
 
   /// Return the number of keyframes in the map
   inline size_t size() const { return keyframes_.size(); }
+
+  /// Atorf Return all Points of the Map
+  void getAllPtsOfMap();
+
 };
 
 /// A collection of debug functions to check the data consistency.
