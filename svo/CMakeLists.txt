@@ -2,19 +2,20 @@
 # user build settings
 
 SET(TRACE TRUE)
-SET(HAVE_G2O FALSE) 
+SET(HAVE_G2O TRUE)
 SET(USE_ROS TRUE) # Set FALSE if you want to build this package without Catkin
-SET(DEBUG_OUTPUT FALSE) # Only relevant if build without ROS
+SET(DEBUG_OUTPUT TRUE) # Only relevant if build without ROS
 
 ################################################################################
 
 SET(PROJECT_NAME svo)
 PROJECT(${PROJECT_NAME})
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8.3)
-SET(CMAKE_BUILD_TYPE Release) # Release, RelWithDebInfo
+SET(CMAKE_BUILD_TYPE Debug) # Release, RelWithDebInfo
 SET(CMAKE_VERBOSE_MAKEFILE OFF)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
-
+set(INCLUDE_DIR /include)
+include_directories (${INCLUDE_DIR})
 # Set definitions
 IF(TRACE)
   ADD_DEFINITIONS(-DSVO_TRACE)
@@ -28,6 +29,7 @@ ENDIF()
 IF(DEBUG_OUTPUT)
   ADD_DEFINITIONS(-DSVO_DEBUG_OUTPUT)
 ENDIF()
+add_definitions(${PCL_DEFINITIONS})
 
 # Set build flags, set ARM_ARCHITECTURE environment variable on Odroid
 SET(CMAKE_CXX_FLAGS "-Wall -D_LINUX -D_REENTRANT -march=native -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unknown-pragmas")
@@ -43,18 +45,20 @@ ELSE()
 ENDIF()
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -fsee -fomit-frame-pointer -fno-signed-zeros -fno-math-errno -funroll-loops")
 
-# Add plain cmake packages 
+# Add plain cmake packages
+
 FIND_PACKAGE(OpenCV REQUIRED)
 FIND_PACKAGE(Eigen REQUIRED)
 FIND_PACKAGE(Sophus REQUIRED)
 FIND_PACKAGE(fast REQUIRED)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system)
-
+find_package( PCL REQUIRED )
 IF(USE_ROS)
-  FIND_PACKAGE(catkin REQUIRED COMPONENTS roscpp roslib cmake_modules vikit_common vikit_ros)
-  catkin_package(
-      DEPENDS Eigen OpenCV Sophus Boost fast
-      CATKIN_DEPENDS roscpp roslib vikit_common vikit_ros
+  FIND_PACKAGE(catkin REQUIRED COMPONENTS pcl_msgs  pcl_ros pcl_conversions roscpp roslib cmake_modules vikit_common vikit_ros  eigen_conversions)
+
+catkin_package(
+      DEPENDS Eigen OpenCV Sophus Boost fast PCL
+      CATKIN_DEPENDS  pcl_msgs  roscpp roslib vikit_common vikit_ros
       INCLUDE_DIRS include
       LIBRARIES svo
   )
@@ -72,7 +76,9 @@ INCLUDE_DIRECTORIES(
   ${Sophus_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${fast_INCLUDE_DIRS}
+${PCL_INCLUDE_DIRS}
 )
+link_directories(${PCL_LIBRARY_DIRS})
 
 # Set link libraries
 LIST(APPEND LINK_LIBS 
@@ -92,6 +98,21 @@ ENDIF()
 
 # Set sourcefiles
 LIST(APPEND SOURCEFILES
+ include/svo/frame_handler_mono.h
+ include/svo/frame_handler_base.h
+ include/svo/frame.h
+ include/svo/point.h
+ include/svo/map.h
+ include/svo/pose_optimizer.h
+ include/svo/initialization.h
+ include/svo/matcher.h
+ include/svo/reprojector.h
+ include/svo/feature_alignment.h
+ include/svo/feature_detection.h
+ include/svo/depth_filter.h
+ include/svo/config.h
+ include/svo/sparse_img_align.h
+  include/svo/field_edge_detector.h
   src/frame_handler_mono.cpp
   src/frame_handler_base.cpp
   src/frame.cpp
@@ -105,7 +126,8 @@ LIST(APPEND SOURCEFILES
   src/feature_detection.cpp
   src/depth_filter.cpp
   src/config.cpp
-  src/sparse_img_align.cpp)
+  src/sparse_img_align.cpp
+    src/field_edge_detector.cpp)
 
 # Add g2o if available
 IF(HAVE_G2O)
@@ -123,7 +145,7 @@ ENDIF(HAVE_G2O)
 
 # Create svo library
 ADD_LIBRARY(svo SHARED ${SOURCEFILES})
-TARGET_LINK_LIBRARIES(svo ${LINK_LIBS})
+TARGET_LINK_LIBRARIES(svo ${LINK_LIBS}  ${PCL_LIBRARIES} )
 
 ################################################################################
 # TESTS
