@@ -28,6 +28,8 @@
 #include <svo/point.h>
 #include <svo_msgs/MapPoints.h>
 #include <svo/field_edge_detector.h>
+
+
 namespace svo {
 
 class Point;

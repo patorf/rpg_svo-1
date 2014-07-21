@@ -2,14 +2,18 @@
 
 
 namespace svo {
-Field_edge_detector::Field_edge_detector(){}
-void subCB(const svo_msgs::MapPoints::ConstPtr & msg)
+Field_edge_detector::Field_edge_detector(){
+
+    plane_pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> > ("myPointCloud", 1);
+
+}
+void Field_edge_detector::subCB(const svo_msgs::MapPoints::ConstPtr & msg)
 {
-    ROS_INFO_STREAM("create pointcloud");
+  ROS_INFO_STREAM("create pointcloud");
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 
-    cloud->resize(msg->points.size());
+  cloud->resize(msg->points.size());
    for (unsigned int i=0; i < msg->points.size(); ++i)
         {
           const geometry_msgs::Point &data = msg->points[i];
@@ -21,6 +25,10 @@ void subCB(const svo_msgs::MapPoints::ConstPtr & msg)
                           "z: " << data.z );*/
         }
 
+
+
+
+
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     // Create the segmentation object
@@ -31,10 +39,12 @@ void subCB(const svo_msgs::MapPoints::ConstPtr & msg)
     // Mandatory
     seg.setModelType (pcl::SACMODEL_PLANE);
     seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setDistanceThreshold (0.01);
+    seg.setDistanceThreshold (0.05);
 
     seg.setInputCloud (cloud);
     seg.segment (*inliers, *coefficients);
+
+
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr pub_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 
@@ -43,15 +53,15 @@ void subCB(const svo_msgs::MapPoints::ConstPtr & msg)
     for (unsigned int i = 0; i < inliers->indices.size(); ++i) {
         pub_cloud->points[i]=cloud->points[inliers->indices[i]];
     }
-    ros::NodeHandle nh;
 
-    std::string topic = nh.resolveName("point_cloud");
-    uint32_t queue_size = 1;
-    ros::Publisher pub = nh.advertise<pcl::PointCloud<pcl::PointXYZ> > (topic, queue_size);
-      ROS_INFO_STREAM("publish plane Points"<<pub_cloud->points.size());
-      pub_cloud->header.frame_id="my_frame_ID";
-    pub.publish(pub_cloud);
-    ros::spinOnce();
+
+    if (nh.ok()){
+        ROS_INFO_STREAM("publish plane Points1: "<<pub_cloud->points.size());
+       //Damit rviz den Koordinatenrahmen kennt
+        pub_cloud->header.frame_id="/world";
+
+        plane_pub.publish(pub_cloud);
+    }
 
 
 }
@@ -61,8 +71,10 @@ void Field_edge_detector::convert_to_pcl(){
   //    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
       //cloud.push_back(pcl::PointXYZ(1,2,3));
 
-      ros::NodeHandle np;
-      sb = np.subscribe("mapPoints",1000,svo::subCB);
+      //ros::NodeHandle np;
+      sb = nh.subscribe("mapPoints",
+                        3000,&Field_edge_detector::subCB,
+                        this);
 }
 
 

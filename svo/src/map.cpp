@@ -96,17 +96,23 @@ void Map::safeDeletePoint(Point* pt)
 
   // Delete mappoint
   deletePoint(pt);
+
+
 }
 
 void Map::deletePoint(Point* pt)
 {
   pt->type_ = Point::TYPE_DELETED;
   trash_points_.push_back(pt);
+
 }
 
 void Map::addKeyframe(FramePtr new_keyframe)
 {
+    getAllPtsOfMap();
+
   keyframes_.push_back(new_keyframe);
+
 }
 
 void Map::getCloseKeyframes(const FramePtr& frame, list< pair<FramePtr,double> >& close_kfs) const
@@ -130,6 +136,7 @@ void Map::getCloseKeyframes(const FramePtr& frame, list< pair<FramePtr,double> >
       }
     }
   }
+
 }
 
 FramePtr Map::getClosestKeyframe(const FramePtr& frame) const
@@ -149,6 +156,7 @@ FramePtr Map::getClosestKeyframe(const FramePtr& frame) const
 
 FramePtr Map::getFurthestKeyframe(const Vector3d& pos) const
 {
+
   FramePtr furthest_kf;
   double maxdist = 0.0;
   for(auto it=keyframes_.begin(), ite=keyframes_.end(); it!=ite; ++it)
@@ -201,19 +209,21 @@ void Map::emptyTrash()
   });
   trash_points_.clear();
   point_candidates_.emptyTrash();
-  getAllPtsOfMap();
+
 }
 
 void Map::getAllPtsOfMap()
 {
+    ROS_INFO_STREAM("getAllPtsOfMap-");
+
     //geometry_msgs::Point [] allPoints;
     //geometry_msgs/Point[] sd;
     svo_msgs::MapPoints allPoints;
     ros::NodeHandle nh;
-    ros::Publisher pb = nh.advertise<svo_msgs::MapPoints>("mapPoints",1000);
+    ros::Publisher pb = nh.advertise<svo_msgs::MapPoints>("mapPoints",3000);
   //  ros::Publisher pb = nh.advertise<std_msgs::String>("mapPoints",1000);
-
     for(auto it=keyframes_.begin(); it!=keyframes_.end(); ++it)
+
     {
       for(auto ftr=(*it)->fts_.begin(); ftr!=(*it)->fts_.end(); ++ftr)
       {
@@ -221,13 +231,17 @@ void Map::getAllPtsOfMap()
           continue;
         else {
 
+
+
       //  allPoints.push_back((*ftr)->point);
 
-        Vector3d mypos = (*ftr)->point->pos_;
+       Vector3d mypos = (*ftr)->point->pos_;
        // Vector3d v(1,2,3);
+
         geometry_msgs::Point pubPoint;
 
         tf::pointEigenToMsg(mypos,pubPoint);
+
         allPoints.points.push_back(pubPoint);
         // allPoints.push_back(pubPoint);
         //if (!(*ftr)->point->normal_set_){
@@ -235,9 +249,12 @@ void Map::getAllPtsOfMap()
        // }
         }
       }
-   pb.publish(allPoints);
-   ros::spinOnce();
+
     }
+    pb.publish(allPoints);
+    ROS_INFO_STREAM("PUblish Points");
+
+   // ros::spinOnce();
 }
 
 MapPointCandidates::MapPointCandidates()
