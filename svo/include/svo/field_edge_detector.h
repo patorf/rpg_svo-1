@@ -12,7 +12,8 @@
 #include <pcl/conversions.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/segmentation/sac_segmentation.h>
-
+#include<pcl/common/intersections.h>
+#include <pcl/filters/extract_indices.h>
 namespace svo {
 
 class Field_edge_detector
@@ -21,9 +22,15 @@ public:
    Field_edge_detector();
    void  convert_to_pcl();
    ros::Subscriber sb;
-   ros::Publisher plane_pub;
+   ros::Publisher plane_pub_1;
+   ros::Publisher plane_pub_2;
+   ros::Publisher planeIntersection;
+
+
    ros::NodeHandle nh;
    void subCB(const svo_msgs::MapPoints::ConstPtr & msg);
+   void IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
+
 };
 
 }

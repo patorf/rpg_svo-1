@@ -12,7 +12,7 @@
     <rosparam file="$(find svo_ros)/param/vo_fast.yaml" />
     
     <!-- Initial camera orientation, make it point downwards -->
-    <param name="init_rx" value="3.14" />
+    <param name="init_rx" value="0.0" />
     <param name="init_ry" value="0.00" />
     <param name="init_rz" value="0.00" />
 
