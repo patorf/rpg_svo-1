@@ -25,7 +25,8 @@ public:
    ros::Publisher plane_pub_1;
    ros::Publisher plane_pub_2;
    ros::Publisher planeIntersection;
-
+   Eigen::Vector3d edgeStart;
+   Eigen::Vector3d edgeEnd;
 
    ros::NodeHandle nh;
    void subCB(const svo_msgs::MapPoints::ConstPtr & msg);

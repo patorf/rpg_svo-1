@@ -251,7 +251,7 @@ FrameHandlerMono::UpdateResult FrameHandlerMono::relocalizeFrame(
     if(res != RESULT_FAILURE)
     {
       stage_ = STAGE_DEFAULT_FRAME;
-      SVO_INFO_STREAM("Relocalization successful.");
+      SVO_INFO_STREAM("Relocalization successful!!!.");
     }
     else
       new_frame_->T_f_w_ = T_f_w_last; // reset to last well localized pose

@@ -41,8 +41,8 @@ Visualizer::
 Visualizer() :
     pnh_("~"),
     trace_id_(0),
-    img_pub_level_(vk::getParam<int>("svo/publish_img_pyr_level", 0)),
-    img_pub_nth_(vk::getParam<int>("svo/publish_every_nth_img", 1)),
+    img_pub_level_(vk::getParam<int>("svo/publish_img_pyr_level", 1)),
+    img_pub_nth_(vk::getParam<int>("svo/publish_every_nth_img", 4)),
     dense_pub_nth_(vk::getParam<int>("svo/publish_every_nth_dense_input", 1)),
     publish_world_in_cam_frame_(vk::getParam<bool>("svo/publish_world_in_cam_frame", true)),
     publish_map_every_frame_(vk::getParam<bool>("svo/publish_map_every_frame", false)),
@@ -59,6 +59,8 @@ Visualizer() :
   // create video publisher
   image_transport::ImageTransport it(pnh_);
   pub_images_ = it.advertise("image", 10);
+
+
 }
 
 void Visualizer::publishMinimal(
@@ -106,6 +108,7 @@ void Visualizer::publishMinimal(
     return;
   }
 
+
   // Publish pyramid-image every nth-frame.
   if(img_pub_nth_ > 0 && trace_id_%img_pub_nth_ == 0 && pub_images_.getNumSubscribers() > 0)
   {
@@ -124,7 +127,6 @@ void Visualizer::publishMinimal(
                  cv::Point2f(it_cur->x/scale, it_cur->y/scale),
                  cv::Point2f(it_ref->x/scale, it_ref->y/scale), cv::Scalar(0,255,0), 2);
     }
-
     if(img_pub_level_ == 0)
     {
       for(Features::iterator it=frame->fts_.begin(); it!=frame->fts_.end(); ++it)
@@ -140,14 +142,30 @@ void Visualizer::publishMinimal(
                         cv::Point2f((*it)->px[0]+2, (*it)->px[1]+2),
                         cv::Scalar(0,255,0), CV_FILLED);
       }
+
     }
-    if(img_pub_level_ == 1)
-      for(Features::iterator it=frame->fts_.begin(); it!=frame->fts_.end(); ++it)
+    if(img_pub_level_ == 1){
+        //ATORF
+      //  ROS_INFO_STREAM("px"<<frame->fts_.begin()->px[0]);
+        Vector2d pxStart(frame->w2c(slam.map().my_fed.edgeStart));
+        Vector2d pxEnd(frame->w2c(slam.map().my_fed.edgeEnd));
+
+
+
+        cv::line(img_rgb,
+                 cv::Point2f(pxStart[0]/scale,pxStart[1]/scale),
+                 cv::Point2f(pxEnd[0]/scale,pxEnd[1]/scale),
+               //  cv::Point2f(100.0,100.0),
+               //  cv::Point2f(150.0,150.0),
+                 cv::Scalar(0,255,0),
+                 2);
+         //-ATORF
+      for(Features::iterator it=frame->fts_.begin(); it!=frame->fts_.end(); ++it){
         cv::rectangle(img_rgb,
                       cv::Point2f((*it)->px[0]/scale-1, (*it)->px[1]/scale-1),
                       cv::Point2f((*it)->px[0]/scale+1, (*it)->px[1]/scale+1),
-                      cv::Scalar(0,255,0), CV_FILLED);
-    else
+                      cv::Scalar(0,255,0), CV_FILLED);}
+   } else
       for(Features::iterator it=frame->fts_.begin(); it!=frame->fts_.end(); ++it)
         cv::rectangle(img_rgb,
                       cv::Point2f((*it)->px[0]/scale, (*it)->px[1]/scale),

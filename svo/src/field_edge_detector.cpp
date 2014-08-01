@@ -7,7 +7,8 @@ Field_edge_detector::Field_edge_detector(){
     plane_pub_1 = nh.advertise<pcl::PointCloud<pcl::PointXYZ> > ("myPointCloud1", 1);
     plane_pub_2 = nh.advertise<pcl::PointCloud<pcl::PointXYZ> > ("myPointCloud2", 1);
     planeIntersection = nh.advertise<pcl::PointCloud<pcl::PointXYZ> > ("planeIntersection", 1);
-
+  //  edgeStart=Eigen::Vector3d();
+   // edgeEnd=Eigen::Vector3d();
 
 }
 void Field_edge_detector::subCB(const svo_msgs::MapPoints::ConstPtr & msg)
@@ -130,15 +131,22 @@ void Field_edge_detector::IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Pt
         linePoints->resize(100);
         linePoints->header.frame_id="/world";
         for (int i = 0; i < 100; ++i) {
-            linePoints->points[i].x= line[0]+i*line[3];
-            linePoints->points[i].y= line[1]+i*line[4];
-
-            linePoints->points[i].z= line[2]+i*line[5];
+            linePoints->points[i].x= line[0]+(i-50)*line[3];
+            linePoints->points[i].y= line[1]+(i-50)*line[4];
+            linePoints->points[i].z= line[2]+(i-50)*line[5];
 
         }
+        edgeStart=Eigen::Vector3d(linePoints->points[50].x,
+                linePoints->points[50].y,
+                linePoints->points[50].z);
 
+        edgeEnd=Eigen::Vector3d(linePoints->points[55].x,
+                linePoints->points[55].y,
+                linePoints->points[55].z);
+      //  edgeEnd=linePoints->points[99];
+        ROS_INFO_STREAM("LIIIINIIIE");
         planeIntersection.publish(linePoints);
-        ROS_INFO_STREAM(line);
+        //ROS_INFO_STREAM(line);
 
     }
 
