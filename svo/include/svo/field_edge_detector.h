@@ -31,6 +31,7 @@ public:
    ros::NodeHandle nh;
    void subCB(const svo_msgs::MapPoints::ConstPtr & msg);
    void IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
+   bool check_right_angle_of_Planes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
 
 };
 

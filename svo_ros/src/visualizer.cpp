@@ -147,8 +147,30 @@ void Visualizer::publishMinimal(
     if(img_pub_level_ == 1){
         //ATORF
       //  ROS_INFO_STREAM("px"<<frame->fts_.begin()->px[0]);
-        Vector2d pxStart(frame->w2c(slam.map().my_fed.edgeStart));
-        Vector2d pxEnd(frame->w2c(slam.map().my_fed.edgeEnd));
+
+        Vector3d edge_start_f( frame->w2f(slam.map().my_fed.edgeStart));
+        Vector3d edge_end_f( frame->w2f(slam.map().my_fed.edgeEnd));
+
+        Vector3d direction_f (edge_end_f-edge_start_f);
+        direction_f.normalize();
+        double lamda = -edge_start_f[0]/direction_f[0];
+
+        Vector3d edge_start_center_f = edge_start_f+lamda*direction_f;
+
+//        SVO_INFO_STREAM("center Point");
+
+
+        Vector3d cornerpoint_f(frame->c2f(0.0,0.0));
+
+        Vector3d cornerpoint_in_z_f(cornerpoint_f*edge_start_center_f[2]);
+        double b =(cornerpoint_in_z_f - edge_start_center_f).norm();
+        //abstand vom mittelpunkt auf der kante bis zum eckpunkt der kamera
+        //SVO_INFO_STREAM(b);
+
+      //  double b= 0.2 ;//fuer Labor ecke
+        b=b*0.5;
+        Vector2d pxStart(frame->f2c(edge_start_center_f+b*direction_f));
+        Vector2d pxEnd(frame->f2c(edge_start_center_f-b*direction_f));
 
 
 

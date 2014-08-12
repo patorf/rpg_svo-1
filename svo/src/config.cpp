@@ -47,7 +47,7 @@ Config::Config() :
     triang_min_corner_score(vk::getParam<double>("svo/triang_min_corner_score", 20.0)),
     triang_half_patch_size(vk::getParam<int>("svo/triang_half_patch_size", 4)),
     subpix_n_iter(vk::getParam<int>("svo/subpix_n_iter", 10)),
-    max_n_kfs(vk::getParam<int>("svo/max_n_kfs", 10)),
+    max_n_kfs(vk::getParam<int>("svo/max_n_kfs",20)),
     img_imu_delay(vk::getParam<double>("svo/img_imu_delay", 0.0)),
     max_fts(vk::getParam<int>("svo/max_fts", 140)),
     quality_min_fts(vk::getParam<int>("svo/quality_min_fts", 50)),

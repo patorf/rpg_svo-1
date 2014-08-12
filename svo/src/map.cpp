@@ -109,7 +109,7 @@ void Map::deletePoint(Point* pt)
 
 void Map::addKeyframe(FramePtr new_keyframe)
 {
-    getAllPtsOfMap();
+    getAllPtsOfMap(new_keyframe);
 
   keyframes_.push_back(new_keyframe);
 
@@ -212,7 +212,7 @@ void Map::emptyTrash()
 
 }
 
-void Map::getAllPtsOfMap()
+void Map::getAllPtsOfMap(FramePtr new_keyframe)
 {
     ROS_INFO_STREAM("getAllPtsOfMap-");
 
@@ -229,7 +229,7 @@ void Map::getAllPtsOfMap()
       {
         if((*ftr)->point == NULL)
           continue;
-        else {
+        else if(new_keyframe->isVisible( (*ftr)->point->pos_)) {
 
 
 
