@@ -14,6 +14,14 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include<pcl/common/intersections.h>
 #include <pcl/filters/extract_indices.h>
+
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/normal_3d_omp.h>
+
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+
+#include <algorithm>    // std::min_element, std::max_element
+
 namespace svo {
 
 class Field_edge_detector
@@ -21,15 +29,18 @@ class Field_edge_detector
 public:
    Field_edge_detector();
    void  convert_to_pcl();
-   ros::Subscriber sb;
+   ros::Subscriber sb_mappoints;
+   ros::Subscriber sb_pose;
    ros::Publisher plane_pub_1;
    ros::Publisher plane_pub_2;
    ros::Publisher planeIntersection;
    Eigen::Vector3d edgeStart;
    Eigen::Vector3d edgeEnd;
+   Eigen::Vector4f pose_pos;
 
    ros::NodeHandle nh;
    void subCB(const svo_msgs::MapPoints::ConstPtr & msg);
+   void subPose (const geometry_msgs::PoseWithCovarianceStamped & msg);
    void IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
    bool check_right_angle_of_Planes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
 

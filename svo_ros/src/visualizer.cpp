@@ -42,7 +42,7 @@ Visualizer() :
     pnh_("~"),
     trace_id_(0),
     img_pub_level_(vk::getParam<int>("svo/publish_img_pyr_level", 1)),
-    img_pub_nth_(vk::getParam<int>("svo/publish_every_nth_img", 4)),
+    img_pub_nth_(vk::getParam<int>("svo/publish_every_nth_img", 6)),
     dense_pub_nth_(vk::getParam<int>("svo/publish_every_nth_dense_input", 1)),
     publish_world_in_cam_frame_(vk::getParam<bool>("svo/publish_world_in_cam_frame", true)),
     publish_map_every_frame_(vk::getParam<bool>("svo/publish_map_every_frame", false)),
