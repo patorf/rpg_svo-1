@@ -113,7 +113,7 @@ void Map::addKeyframe(FramePtr new_keyframe)
 
   keyframes_.push_back(new_keyframe);
   if (this->keyframes_.size()>2){
-       getAllPtsOfMap(new_keyframe);
+       publishVisiblePoints(new_keyframe);
   }
 }
 
@@ -214,49 +214,32 @@ void Map::emptyTrash()
 
 }
 
-void Map::getAllPtsOfMap(FramePtr new_keyframe)
+void Map::publishVisiblePoints(FramePtr new_keyframe)
 {
-    ROS_INFO_STREAM("getAllPtsOfMap-");
+    ROS_INFO_STREAM("publishVisiblePoints-");
 
-    //geometry_msgs::Point [] allPoints;
-    //geometry_msgs/Point[] sd;
-    svo_msgs::MapPoints allPoints;
+
+    svo_msgs::MapPoints visiblePoints;
     ros::NodeHandle nh;
     ros::Publisher pb = nh.advertise<svo_msgs::MapPoints>("mapPoints",3000);
-  //  ros::Publisher pb = nh.advertise<std_msgs::String>("mapPoints",1000);
     for(auto it=keyframes_.begin(); it!=keyframes_.end(); ++it)
-
     {
-      for(auto ftr=(*it)->fts_.begin(); ftr!=(*it)->fts_.end(); ++ftr)
-      {
-        if((*ftr)->point == NULL)
-          continue;
-        else if(new_keyframe->isVisible( (*ftr)->point->pos_)) {
-
-
-
-      //  allPoints.push_back((*ftr)->point);
-
-       Vector3d mypos = (*ftr)->point->pos_;
-       // Vector3d v(1,2,3);
-
-        geometry_msgs::Point pubPoint;
-
-        tf::pointEigenToMsg(mypos,pubPoint);
-
-        allPoints.points.push_back(pubPoint);
-        // allPoints.push_back(pubPoint);
-        //if (!(*ftr)->point->normal_set_){
-        //     ROS_INFO_STREAM(mypos.norm());
-       // }
+        for(auto ftr=(*it)->fts_.begin(); ftr!=(*it)->fts_.end(); ++ftr)
+        {
+            if((*ftr)->point == NULL)
+                continue;
+            else if(new_keyframe->isVisible( (*ftr)->point->pos_)) {
+                Vector3d point_pos = (*ftr)->point->pos_;
+                geometry_msgs::Point pubPoint;
+                tf::pointEigenToMsg(point_pos,pubPoint);
+                visiblePoints.points.push_back(pubPoint);
+            }
         }
-      }
-
     }
-    pb.publish(allPoints);
+    pb.publish(visiblePoints);
     ROS_INFO_STREAM("PUblish Points");
 
-   // ros::spinOnce();
+    // ros::spinOnce();
 }
 
 MapPointCandidates::MapPointCandidates()

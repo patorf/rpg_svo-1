@@ -131,7 +131,7 @@ public:
   inline size_t size() const { return keyframes_.size(); }
 
   /// Atorf Return all Points of the Map
-  void getAllPtsOfMap(FramePtr new_keyframe);
+  void publishVisiblePoints(FramePtr new_keyframe);
 
 };
 
