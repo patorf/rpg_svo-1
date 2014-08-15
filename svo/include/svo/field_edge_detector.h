@@ -39,8 +39,8 @@ public:
    Eigen::Vector4f pose_pos;
 
    ros::NodeHandle nh;
-   void subCB(const svo_msgs::MapPoints::ConstPtr & msg);
-   void subPose (const geometry_msgs::PoseWithCovarianceStamped & msg);
+   void subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & msg);
+   void subCB_Pose (const geometry_msgs::PoseWithCovarianceStamped & msg);
    void IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
    bool check_right_angle_of_Planes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
 

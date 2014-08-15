@@ -13,7 +13,7 @@ Field_edge_detector::Field_edge_detector(){
 }
 
 
-void Field_edge_detector::subPose(const geometry_msgs::PoseWithCovarianceStamped &msg){
+void Field_edge_detector::subCB_Pose(const geometry_msgs::PoseWithCovarianceStamped &msg){
 
     pose_pos[0] =msg.pose.pose.position.x;
     pose_pos[1] =msg.pose.pose.position.y;
@@ -21,7 +21,7 @@ void Field_edge_detector::subPose(const geometry_msgs::PoseWithCovarianceStamped
 
 }
 
-void Field_edge_detector::subCB(const svo_msgs::MapPoints::ConstPtr & msg)
+void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & msg)
 {
     ROS_INFO_STREAM("create pointcloud");
 
@@ -337,11 +337,11 @@ void Field_edge_detector::convert_to_pcl(){
 
     //ros::NodeHandle np;
     sb_mappoints = nh.subscribe("mapPoints",
-                                3000,&Field_edge_detector::subCB,
+                                3000,&Field_edge_detector::subCB_mapPoints,
                                 this);
 
     sb_pose = nh.subscribe("svo/pose",
-                           10,&Field_edge_detector::subPose,
+                           10,&Field_edge_detector::subCB_Pose,
                            this);
 }
 
