@@ -1,6 +1,6 @@
 #include <svo/field_edge_detector.h>
 
-
+typedef std::pair<int,float> mypair;
 namespace svo {
 Field_edge_detector::Field_edge_detector(){
 
@@ -61,7 +61,9 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
         // Mandatory
         seg.setModelType (pcl::SACMODEL_PLANE);
         seg.setMethodType (pcl::SAC_RANSAC);
-        seg.setDistanceThreshold (0.051);//0.05
+        seg.setDistanceThreshold (0.02);//0.05
+      //  seg.setMaxIterations(2000);
+
 
         //  pcl::ModelCoefficients::Ptr allCoeffis[3];
         std::vector<  pcl::ModelCoefficients::Ptr> allCoeffis;
@@ -71,15 +73,17 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
         // Create the filtering object
         pcl::ExtractIndices<pcl::PointXYZ> extract;
         int n_found_plane = 0;
-        while (n_found_plane<3) {
+        while (n_found_plane<5) {
 
 
 
             pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
-            if (cloud->points.size()>5){
+            if (cloud->points.size()>30){
                 seg.setInputCloud (cloud);
                 seg.segment (*inliers, *coefficients);
+                ROS_INFO_STREAM("planeSIZE: "<<inliers->indices.size());
             }
+
             // ROS_INFO_STREAM(inliers->indices.size());
             if (coefficients->values.size()==0)
             {
@@ -123,17 +127,80 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
 
                     if (check_right_angle_of_Planes(allCoeffis[i],allCoeffis[j])){
                         orthogonal_plane_found=true;
-                        IntersectPlancesAndDrawLine(allCoeffis[i],allCoeffis[j]);
+                        IntersectPlanes(allCoeffis[i],allCoeffis[j]);
                     }
                 }
             }
             if (!orthogonal_plane_found){
-                ROS_INFO_STREAM("no orthogonal plane found!");
 
+                ROS_ERROR_STREAM("no orthogonal plane found!");
+                edgeStart = Eigen::Vector3d(0,0,0);
+                edgeEnd= Eigen::Vector3d(0,0,0);
             }
+            //Methode 2
         }else{
             ROS_INFO_STREAM("N Plane found:"<<n_found_plane);
+            //create Pair
+            std::vector<mypair> planePairVektor;
 
+            for (int i = 0; i < distToFrame.size(); ++i) {
+                        mypair newPair;
+                        newPair.first=i;
+                        newPair.second=distToFrame[i];
+                        planePairVektor.push_back(newPair);
+            }
+
+
+            //sort pairvektor
+            std::sort(planePairVektor.begin(),planePairVektor.end(),bind(&Field_edge_detector::mycompare,
+                      this,_1,_2));
+
+
+
+
+
+
+
+            for ( int i = 0; i < n_found_plane-1; i++) {
+                //Poition nach der sortierung
+                int originalIndex_i = planePairVektor[i].first;
+
+                for (int j = i+1; j < n_found_plane; j++) {
+                    int originalIndex_j = planePairVektor[j].first;
+
+
+
+                    double angular_tolerance = 15 *3.14/180;
+                    double maxAngle = 180*3.14/180  -angular_tolerance;
+                    double minAngle = 0+angular_tolerance;
+                    Eigen::Vector4f v_coeff_A(allCoeffis[originalIndex_i]->values.data());
+                    Eigen::Vector4f v_coeff_B(allCoeffis[originalIndex_j]->values.data());
+                    v_coeff_A[3]=0;
+                    v_coeff_B[3]=0;
+
+
+
+                    double  angle_rad = pcl::getAngle3D(v_coeff_A,v_coeff_B);
+
+                    if (!(angle_rad<minAngle || angle_rad>maxAngle)){
+                        ROS_INFO_STREAM("plane_nea1:"<<originalIndex_i);
+                        ROS_INFO_STREAM("plane_nea2:"<<originalIndex_j);
+                        ROS_INFO_STREAM(angle_rad*180/3.14);
+                        ROS_INFO_STREAM("inserset nearest planes");
+
+                        IntersectPlanes(allCoeffis[originalIndex_i],allCoeffis[originalIndex_j]);
+                        goto     finishMethod;
+
+
+                    }
+
+                    // if (check_right_angle_of_Planes(allCoeffis[i],allCoeffis[j])){
+                   // orthogonal_plane_found=true;
+                    //  IntersectPlanes(allCoeffis[i],allCoeffis[j]);
+                }
+            }
+
+/*
             // get the two nearst planes
             int i_plane1=-1; //nearest
             int i_plane2=-1; //second nearest
@@ -151,7 +218,6 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
 
             double min2 = *std::max_element(distToFrame.begin(),distToFrame.end());
             for (int i = 0; i < distToFrame.size(); ++i) {
-                ROS_INFO_STREAM("juhhh");
 
                 if (i_plane1 != i ){
                     if (distToFrame[i]<=min2) {
@@ -162,13 +228,8 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
 
             }
 
+*/
 
-            ROS_INFO_STREAM("plane_nea1:"<<i_plane1);
-            ROS_INFO_STREAM("plane_nea2:"<<i_plane2);
-
-            ROS_INFO_STREAM("inserset nearest planes");
-
-            IntersectPlancesAndDrawLine(allCoeffis[i_plane1],allCoeffis[i_plane2]);
 
 
 
@@ -194,7 +255,7 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
     /****** END MODE 1*/
 
     /**** MODE 2 Kruemmung ***/
-    else if (false){
+    else {
 
         // Create the normal estimation class, and pass the input dataset to it
         pcl::NormalEstimationOMP<pcl::PointXYZ, pcl::Normal> ne;
@@ -209,8 +270,8 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
         pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
 
         // Use all neighbors in a sphere of radius 3cm
-        ne.setRadiusSearch (0.2);
-
+        //ne.setRadiusSearch (0.2);
+        ne.setKSearch(10);
         // Compute the features
         ne.compute (*cloud_normals);
         ROS_INFO_STREAM("cloud: "<<cloud->points.size());
@@ -220,7 +281,8 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
         cloud_k->resize(cloud_normals->points.size());
         cloud_k->header.frame_id="/world";
         for (int i = 0; i < cloud_normals->points.size(); ++i) {
-            if (cloud_normals->points[i].curvature>0.05){
+          //  ROS_INFO_STREAM(cloud_normals->points[i].curvature);
+            if (cloud_normals->points[i].curvature>0.1){
                 //ROS_INFO_STREAM(cloud_normals->points[i].curvature);
                 cloud_k->points[i]= cloud->points[i];
             }
@@ -239,7 +301,7 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
         // Mandatory
         seg.setModelType (pcl::SACMODEL_LINE);
         seg.setMethodType (pcl::SAC_RANSAC);
-        seg.setDistanceThreshold (0.05);
+        seg.setDistanceThreshold (0.1);
 
         pcl::ModelCoefficients::Ptr line (new pcl::ModelCoefficients);
 
@@ -253,11 +315,16 @@ void Field_edge_detector::subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & 
         ROS_INFO_STREAM(edgeStart);
         ROS_INFO_STREAM(edgeEnd);
     }
+
+    finishMethod:
     ros::Time end = ros::Time::now();
+    ROS_INFO_STREAM("time:");
     ROS_INFO_STREAM((end-begin).toSec());
 
 
 }
+  bool Field_edge_detector::mycompare ( const mypair l, const mypair r){ return l.first < r.first; }
+
 bool Field_edge_detector::check_right_angle_of_Planes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB){
     double angle_tolerance = 20 *3.14/180;
     double maxAngle = 90*3.14/180  +angle_tolerance;
@@ -286,18 +353,23 @@ bool Field_edge_detector::check_right_angle_of_Planes(pcl::ModelCoefficients::Pt
 
 }
 
-void Field_edge_detector::IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB){
+void Field_edge_detector::IntersectPlanes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB){
 
     Eigen::Vector4f v_coeff_A(coefficientsA->values.data());
     Eigen::Vector4f v_coeff_B(coefficientsB->values.data());
     //    ROS_INFO_STREAM(v_coeff_A);
     //    ROS_INFO_STREAM(v_coeff_B);
     Eigen::VectorXf line;
-    bool intSuccess=  pcl::planeWithPlaneIntersection(v_coeff_A,v_coeff_B,line);
+    bool intSuccess=  pcl::planeWithPlaneIntersection(v_coeff_A,v_coeff_B,line,0.04);
     if (intSuccess){
 
         edgeStart = Eigen::Vector3d(line[0],line[1],line[2]);
         edgeEnd= Eigen::Vector3d(line[0]+line[3],line[1]+line[4],line[2]+line[5]);
+    }else{
+        edgeStart = Eigen::Vector3d(0,0,0);
+        edgeEnd= Eigen::Vector3d(0,0,0);
+
+
 
         //        pcl::PointCloud<pcl::PointXYZ>::Ptr linePoints(new pcl::PointCloud<pcl::PointXYZ>);
         //        linePoints->resize(100);

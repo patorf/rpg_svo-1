@@ -168,7 +168,7 @@ void Visualizer::publishMinimal(
         //SVO_INFO_STREAM(b);
 
       //  double b= 0.2 ;//fuer Labor ecke
-        b=b*0.5;
+        b=b*2;
         Vector2d pxStart(frame->f2c(edge_start_center_f+b*direction_f));
         Vector2d pxEnd(frame->f2c(edge_start_center_f-b*direction_f));
 
@@ -179,7 +179,7 @@ void Visualizer::publishMinimal(
                  cv::Point2f(pxEnd[0]/scale,pxEnd[1]/scale),
                //  cv::Point2f(100.0,100.0),
                //  cv::Point2f(150.0,150.0),
-                 cv::Scalar(0,255,0),
+                 cv::Scalar(250,0,0),
                  2);
          //-ATORF
       for(Features::iterator it=frame->fts_.begin(); it!=frame->fts_.end(); ++it){

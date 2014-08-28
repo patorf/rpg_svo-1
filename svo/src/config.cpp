@@ -29,7 +29,7 @@ Config::Config() :
     use_imu(vk::getParam<bool>("svo/use_imu", false)),
     core_n_kfs(vk::getParam<int>("svo/core_n_kfs", 3)),
     map_scale(vk::getParam<double>("svo/map_scale", 1.0)),
-    grid_size(vk::getParam<int>("svo/grid_size", 50)),
+    grid_size(vk::getParam<int>("svo/grid_size", 30)),
     init_min_disparity(vk::getParam<double>("svo/init_min_disparity", 50.0)),
     init_min_tracked(vk::getParam<int>("svo/init_min_tracked", 50)),
     init_min_inliers(vk::getParam<int>("svo/init_min_inliers", 40)),
@@ -47,9 +47,9 @@ Config::Config() :
     triang_min_corner_score(vk::getParam<double>("svo/triang_min_corner_score", 20.0)),
     triang_half_patch_size(vk::getParam<int>("svo/triang_half_patch_size", 4)),
     subpix_n_iter(vk::getParam<int>("svo/subpix_n_iter", 10)),
-    max_n_kfs(vk::getParam<int>("svo/max_n_kfs",20)),
+    max_n_kfs(vk::getParam<int>("svo/max_n_kfs",10)),
     img_imu_delay(vk::getParam<double>("svo/img_imu_delay", 0.0)),
-    max_fts(vk::getParam<int>("svo/max_fts", 140)),
+    max_fts(vk::getParam<int>("svo/max_fts", 250)),
     quality_min_fts(vk::getParam<int>("svo/quality_min_fts", 50)),
     quality_max_drop_fts(vk::getParam<int>("svo/quality_max_drop_fts", 40))
 #else

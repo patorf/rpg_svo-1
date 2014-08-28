@@ -22,9 +22,12 @@
 
 #include <algorithm>    // std::min_element, std::max_element
 
+typedef std::pair<int,float> mypair;
+
 namespace svo {
 
 class Field_edge_detector
+
 {
 public:
    Field_edge_detector();
@@ -41,9 +44,9 @@ public:
    ros::NodeHandle nh;
    void subCB_mapPoints(const svo_msgs::MapPoints::ConstPtr & msg);
    void subCB_Pose (const geometry_msgs::PoseWithCovarianceStamped & msg);
-   void IntersectPlancesAndDrawLine(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
+   void IntersectPlanes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
    bool check_right_angle_of_Planes(pcl::ModelCoefficients::Ptr coefficientsA,pcl::ModelCoefficients::Ptr coefficientsB);
-
+   bool mycompare (const mypair l, const mypair r);
 };
 
 }
